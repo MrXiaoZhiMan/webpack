@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin=require("html-webpack-plugin");
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const devMode = process.env.NODE_ENV !== 'production';
 
 const path = require("path")
 module.exports={
@@ -20,33 +21,32 @@ module.exports={
         }
         },
         {
-            test: /\.css$/,
-            use: [MiniCssExtractPlugin.loader, 'css-loader'],
-
-            },
-            {
-                test: /\.less$/,
-                use: [{
-                loader: MiniCssExtractPlugin.loader, // creates style nodes from JS strings
-                }, {
-                loader: 'css-loader' // translates CSS into CommonJS
-                }, {
-                loader: 'less-loader' // compiles Less to CSS
-                }]
-                },
-                {
-                    test: /\.scss$/,
-                    use: [{
-                    loader:MiniCssExtractPlugin.loader, // creates style nodes from JS strings
-                    }, {
-                    loader: 'css-loader' // translates CSS into CommonJS
-                    }, {
-                    loader: 'sass-loader' // compiles Less to CSS
-                    }]
-                    }
-                    
-                
-                
+     test: /\.css$/,
+     use: [devMode?'style-loader':MiniCssExtractPlugin.loader, 'css-loader'],
+     },
+     {
+       test: /\.less$/,
+       use: [{
+        loader: devMode?'style-loader':MiniCssExtractPlugin.loader, // creates style nodes from JS strings
+       }, {
+       loader: 'css-loader' // translates CSS into CommonJS
+       }, {
+       loader: 'less-loader' // compiles Less to CSS
+       }]
+       },
+       {
+           test: /\.scss$/,
+           use: [{
+            loader:devMode?'style-loader':MiniCssExtractPlugin.loader,  // creates style nodes from JS strings
+           }, {
+           loader: 'css-loader' // translates CSS into CommonJS
+           }, {
+           loader: 'sass-loader' // compiles Less to CSS
+           }]
+           }
+           
+       
+       
             
         ]
         },
@@ -73,10 +73,26 @@ module.exports={
         new MiniCssExtractPlugin({
             // Options similar to the same options in webpackOptions.output
             // both options are optional
-            filename: '[name]-[hash].css',
-            chunkFilename: '[id].css',
+            filename: devMode ? '[name].css' : '[name].[hash].css',
+            chunkFilename: devMode ? '[id].css' : '[id].[hash].css',
             }),
             
+            
         ]
+        ,
+devServer: {
+contentBase: path.join(__dirname, 'dist'),
+compress: true,//会 gzip(压缩) 和 serve(服务) 所有来自项目根路径下 dist/ 目录的文件
+port: 9000,
+proxy: {
+"/data": { //地址
+"target": "http://www.bjlink32.com/data.php", //接口地址,跨域访问
+// secure: false,// 如果是https接口，需要配置这个参数
+"changeOrigin": true,//开启跨域
+"pathRewrite": { "^/data" : "" }//如果接口本身没有/data需要通过pathRewrite来重写了地址
+}
+}
+}
+
         
 }
